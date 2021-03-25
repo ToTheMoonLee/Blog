@@ -51,31 +51,35 @@
 	1 **我自己的解法**：创建一个空节点的头指针（单链表算法一般都会用到这个技巧，会减少空判断代码），然后具体的想法如下图
 	
 	```
-	null --> 1 --> 2 --> 3 --> 4
+	null->1->2->3->4
 	pre     cur   
-	 
-		_________
-	  |			|
-	  |        👇
-	null  1 --> 2 --> 3 --> 4
-	pre  cur         next
 	
-		_________ 					          
-	  |			|
-	  |        👇
-	null  1 --> 2     3 --> 4	             
-	pre  cur    |    next
-	     👆     |
+	  _______
+	 |       |
+	 |       v
+	null  1->2->3->4
+	 |    |     |
+	pre  cur   next
+	 
+	  _______ 
+	 |       |
+	 |       v
+	null  1->2  3->4
+	 |    |     |
+	pre  cur   next
+	      ^     |
 	      |_____|
 	      
-		    ___________
-	   ___|_____      |			
-	  |   |	   |      |
-	  |   |    👇    👇
-	null  1     2     3 --> 4	
-	pre  cur    |    next
-	     👆     |
+	       ______
+	  ____|___  |    
+	 |    |  |  | 
+	 |    |  v  v 
+	null  1  2  3->4
+	 |    |     |    
+	pre  cur   next
+	      ^     |
 	      |_____|
+
 	        
 	``` 
 	
@@ -181,7 +185,7 @@
 	```
 	
 	2 **空间复杂度O(1)版本** 这个同样是top votes的大佬版本，刚开始没理解是为啥，然后看了几篇解释
-	[floyds-cycle-detection-algorithm-determining-the-starting-point-of-cycle](https://cs.stackexchange.com/questions/10360/floyds-cycle-detection-algorithm-determining-the-starting-point-of-cycle)
+	[floyds-cycle-detection-algorithm-determining-the-starting-point-of-cycle](https://cs.stackexchange.com/questions/10360/floyds-cycle-detection-algorithm-determining-the-starting-point-of-cycle)和
 	[Detecting start of a loop in singly Linked List](https://web.archive.org/web/20160401024212/http://learningarsenal.info:80/index.php/2015/08/24/detecting-start-of-a-loop-in-singly-linked-list/)
 	同样是使用的快慢指针，但是之后的逻辑稍有不同，代码如下：
 	
