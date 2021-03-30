@@ -9,5 +9,7 @@ summary, Recording and sharing
 
 [单链表](https://github.com/ToTheMoonLee/Blog/blob/main/%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3/LinkedList.md)
 
+[stack&queue](https://github.com/ToTheMoonLee/Blog/blob/main/%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3/Stack%26queue.md)
+
 
 
