@@ -58,44 +58,44 @@
 	```
 	class MyQueue {
     
-    Stack<Integer> s1;
-    Stack<Integer> s2;
-
-    /** Initialize your data structure here. */
-    public MyQueue() {
-        s1 = new Stack<>();
-        s2 = new Stack<>();
-    }
-    
-    /** Push element x to the back of queue. */
-    /** 在每次push的时候，先将s1中的所有元素放到s2中，然后将新元素push到s1中，之后再将s2中的元素放入到s1中
-    public void push(int x) {
-        int size = s1.size();
-        for (int i=0;i<size;i++) {
-            s2.push(s1.pop()); 
-        } 
-        s1.push(x);
-        size = s2.size();
-        for (int i=0;i<size;i++) {
-            s1.push(s2.pop());
-        }
-    }
-    
-    /** Removes the element from in front of queue and returns that element. */
-    public int pop() {   
-        return s1.pop();
-    }
-    
-    /** Get the front element. */
-    public int peek() {
-        return s1.peek();
-    }
-    
-    /** Returns whether the queue is empty. */
-    public boolean empty() {
-        return s1.isEmpty();
-    }
-}
+	    Stack<Integer> s1;
+	    Stack<Integer> s2;
+	
+	    /** Initialize your data structure here. */
+	    public MyQueue() {
+	        s1 = new Stack<>();
+	        s2 = new Stack<>();
+	    }
+	    
+	    /** Push element x to the back of queue. */
+	    /** 在每次push的时候，先将s1中的所有元素放到s2中，然后将新元素push到s1中，之后再将s2中的元素放入到s1中
+	    public void push(int x) {
+	        int size = s1.size();
+	        for (int i=0;i<size;i++) {
+	            s2.push(s1.pop()); 
+	        } 
+	        s1.push(x);
+	        size = s2.size();
+	        for (int i=0;i<size;i++) {
+	            s1.push(s2.pop());
+	        }
+	    }
+	    
+	    /** Removes the element from in front of queue and returns that element. */
+	    public int pop() {   
+	        return s1.pop();
+	    }
+	    
+	    /** Get the front element. */
+	    public int peek() {
+	        return s1.peek();
+	    }
+	    
+	    /** Returns whether the queue is empty. */
+	    public boolean empty() {
+	        return s1.isEmpty();
+	    }
+	}
 	```
 	
 3. [Kth Largest Element in a Stream](https://leetcode.com/problems/kth-largest-element-in-a-stream/)
@@ -126,7 +126,7 @@
 			
 			return priorityQueue.peek();
 		}
-}
+	}
 	```	
 
 4. [Sliding Window Maximum](https://leetcode.com/problems/sliding-window-maximum/)
@@ -136,23 +136,23 @@
 	1 **Dequeue双端队列解法**  算法思想：使用dequeue用来保存遍历到的下标i，从i=0开始遍历nums，每次遍历先判断dequeue的最右端元素是否小于nums[i]，如果小于，则将dequeue右端开始所有小与nums[i]的元素都从右端移除；之后判断dequeue最右端元素保存的下标是否小与i-k，即查看是否最左端元素还在窗口范围内，如果不在则从左端移除；最后在i>k-1时，将最左端元素加入到result数组中。
 	
 	```
-	static int[] maxSlidingWindow(int[] nums, int k) {
-	   int[] result = new int[nums.length-k + 1];
-	   LinkedList<Integer> window = new LinkedList<>();
-	   for (int i=0;i<nums.length;i++) {
-	       while (!window.isEmpty() && window.peekFirst() <= i-k) {
-	           window.pollFirst();
-	       }
-	       while (!window.isEmpty() && nums[window.peekLast()] < nums[i]) {
-	           window.pollLast();
-	       }
-	       window.addLast(i);
-	       if (i>=k-1) {
-	           result[i-k+1] = nums[window.peekFirst()];
-	       }
-	   }
-	   return result;
-	}
+		static int[] maxSlidingWindow(int[] nums, int k) {
+		   int[] result = new int[nums.length-k + 1];
+		   LinkedList<Integer> window = new LinkedList<>();
+		   for (int i=0;i<nums.length;i++) {
+		       while (!window.isEmpty() && window.peekFirst() <= i-k) {
+		           window.pollFirst();
+		       }
+		       while (!window.isEmpty() && nums[window.peekLast()] < nums[i]) {
+		           window.pollLast();
+		       }
+		       window.addLast(i);
+		       if (i>=k-1) {
+		           result[i-k+1] = nums[window.peekFirst()];
+		       }
+		   }
+		   return result;
+		}
 	```
 	
 	2 **DP解法** 算法思想还是自己看leetcode的解释吧，看了好多遍才勉强看懂[leetcode dp版本](https://leetcode.com/problems/sliding-window-maximum/discuss/65881/O(n)-solution-in-Java-with-two-simple-pass-in-the-array)
