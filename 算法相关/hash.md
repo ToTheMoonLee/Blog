@@ -1,4 +1,4 @@
-### Stack & Queue 相关算法
+### Hash 相关算法
 
 1. [Valid Anagram](https://leetcode.com/problems/valid-anagram/)
 

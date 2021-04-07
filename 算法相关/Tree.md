@@ -1,4 +1,4 @@
-### Stack & Queue 相关算法
+### Tree 相关算法
 
 1. [Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
 
