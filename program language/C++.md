@@ -49,6 +49,8 @@ your name is lily
 ##### 基本类型
 
 char/short/int/long/long long/float/double，各种类型还有对应的unsigned类型，即无符号类型。默认的都是有符号类型。两者的区别就是表示范围不一样，比如short是 -32768~32767，而unsigned short是0~65535
+bool类型true or false，在C++中，0表示false，非0表示true
+char name[10] = "lily" 在char数组中的存储方式为 l,i,l,y,\0, _ , _ , _ , _ ,_ 会多存一个\0来表示字符结束
 
 ```
     char c = 'a';
@@ -170,4 +172,175 @@ int main()
 18      18
 ```
 
+##### 循环/单个char读取/typedef来定义别名
+
+for循环，while循环和do while循环与java类似。不同的一点就是，条件判断中是可以放入数字的，如果是非零就判断为true，如果为0则判断为false
+
+```
+
+int main() 
+{
+    for (int i=0;i<10;i++) 
+    {
+        cout << "count " << i << endl;
+    }
+
+    int i = 0;
+    while (i<10) 
+    {
+        cout << "count " << i << endl;
+        i++;
+    }
+
+    int j=0;
+    do 
+    {
+        cout << "count " << j << endl;
+        j++;
+    } while (j<10);
+    // 直接将数字放入到条件判断也是可行的，知道count变为0为止
+    int count = 10;
+    while (count) {
+        cout << count-- << endl;
+    }
+    return 0;
+}
+
+```
+
+双重for循环和二维数组与java一样
+
+```
+int main() 
+{
+	// 初始化二维数组
+    int two_dimension_arr[2][3] = {
+        {1,2,3},
+        {4,5,6}
+    };
+    for (int i=0;i<2;i++) {
+        for (int j=0;j<3;j++) {
+            cout << two_dimension_arr[i][j]<< "\t";
+        }
+        cout << endl;
+    }
+    return 0;
+}
+```
+
+可以使用cin.get()和cin.get(char)来读取单个字节，cin.get()使用方式为 ch = cin.get()，当读取到文件末尾时返回EOF标识符（值为-1）；cin.get(char)的方式为 cin.get(ch)，当读取到文件末尾时，返回false
+
+```
+int main() 
+{
+    char ch;
+    cout << (ch=cin.get()) << endl;
+    // cin.get(ch);
+    // cout << ch << endl;
+    return 0;
+}
+
+```
+
+使用typedef可以来给类型定义别名，之后就可以使用这个别名来表示类型了
+
+```
+int main() 
+{
+    typedef int lily;
+    lily a = 1;
+    cout << a << endl;
+    return 0;
+}
+```
+
+##### 逻辑操作符和cctype
+
+`if` `if else` `if else if else` `|| && !`都与java一致，特殊的是c++可以使用
+
+| operator | Alternative Representation |
+| --------| ---------------------------|
+|   `||`  |            or              |
+|   `&&`  |           and              |
+|   `!`   |           not              |
+
+可以使用字符来表示操作符
+
+c中有一些便捷的判断字符的方法，需要`#include <cctype>`，方法如下：
+
+| Function Name | Return Value |
+| ------------- | ------------ |
+|isalnum()      | 如果是letter或者 digital 则返回true|
+|isalpha()      | 是否是字母|
+|isblank()      | 是否是空格|
+|iscntrl()      | 是否是ctrl|
+|isdigit()      | 是否是数字 0～9|
+|isgraph()      | 除了空格以外所有可打印的字符|
+|islower()      | 是否小写字母|
+|isprint()      | 包括空格的可打印字符|
+|ispunct()      | 是否是符号|
+|isspace()      | 是否是空白，包括a space, formfeed, newline, carriage return, horizontal tab, vertical tab|
+|isupper()      | 是否大写字母|
+|isxdigit()      | 是否是16进制中的字符|
+|tolower()      | 转小写|
+|toupper()      | 转大写|
+
+三木运算符 expression1 ? exp2 : exp3 与java一致
+
+switch语句，与java类似
+
+```
+int main() 
+{
+    int i;
+    cin >> i;
+    switch (i)
+    {
+    case 1:
+        cout << "test" << endl;
+        cout << "something" << endl;
+        break;
+    default:
+        break;
+    }
+}
+```
+
+##### 文件I/O
+
+文件I/O需要 fstream 头文件，同时需要声明一个ofstream类型的变量，并且需要open(char)来关联一个文件，使用完毕以后需要close(),其余操作与cout类似，如下：
+
+```
+#include <iostream>
+#include <fstream>
+using namespace std;
+// 输入文件的代码
+int main() 
+{
+    ofstream outFile;
+    outFile.open("test");
+    char name[50];
+    cin.getline(name,50);
+    outFile << name;
+    outFile.close();
+    return 0;
+}
+
+// 输出文件中内容的代码
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+using namespace std;
+
+int main() 
+{
+    ifstream fin;
+    fin.open("test");
+    char test[50];
+    fin.getline(test,40);
+    cout << test << endl;
+    fin.close();
+    return 0;
+}
+```
 
