@@ -344,3 +344,335 @@ int main()
 }
 ```
 
+##### Function
+
+函数跟java中的方法基本一致，一点不同是C++中需要Function prototype，跟Function Definition，Function prototype是给编译器用的，用来编译的时候能找到这个函数。而Function Definition是具体实现，这两个要对应的上。还有一点不同是，C++的参数或返回值会做自动类型转换，比如
+`void sayNum (int);`需要int类型的参数，但是在方法调用的时候，可以传入double类型的1.0作为参数，而java中不行。
+
+```
+void sayNum (int);
+
+int main() 
+{
+	  // 初始化一个variable a，并赋值为1.0
+    double a = 1.0;
+    cout << "a address is " << &a << endl;
+    sayNum(a);
+    return 0;
+}
+// tips： a 和 num 分别是两块不同的内存
+void sayNum(int num) { // 初始化一个variable num，并赋值为传入的1.0，并做类型转换
+    cout << num << endl;
+    cout << "num address is " << &num << endl;
+}
+
+输出如下：
+a address is 0x7ffee20ae630
+1
+num address is 0x7ffee20ae5ec
+
+```
+
+Function中如果参数是Array的话，那么传入的值是Array第一个元素的地址，例如：
+
+```
+void sayNum (int[]);
+
+int main() 
+{
+    int num_arr[] = {1,2,3};
+    // 打印数组的大小，一个int是4个Byte，所以大小是 3x4=12
+    cout << "num_arr size is " << sizeof(num_arr) << endl;
+    sayNum(num_arr);
+    return 0;
+}
+
+void sayNum(int num[]) {
+	// 会打印num数组第一个元素的地址的大小，这里打印的unsigned long，占8个Byte
+    cout << "function num size is " << sizeof(num) << endl;
+}
+
+输出如下：
+num_arr size is 12
+function num size is 8
+```
+
+const关键字，如果在指针之前，那么不可修改指针指向的value，如果在指针名之前，那么不可改变指针保存的地址。
+
+```
+int main() 
+{
+    int age = 18;
+    int height = 165;
+    const int* p_age = &age;	
+    *p_age = 12;					// invalid
+    p_age = &height;			// valid
+    
+    int* const p_int = &age;	
+    *p_int = 20;					// valid
+    p_int = &height;			// invalid
+    return 0;
+}
+```
+
+string字符串（c的字符串本质是一个char数组，即char[],会默认在最后一个数组元素存一个结束符"\0"，在Function中的处理，在function中可以使用char*来充当字符串参数类型，而且不需要传入数组大小，如下：
+
+```
+void sayStr (char*);
+
+int main() 
+{
+    char a[] = "lily";
+    char* b = "lucy";
+
+    sayStr(a);
+    sayStr(b);
+    sayStr("john");
+    return 0;
+}
+
+void sayStr(char* something) {
+    while (*something) {
+        cout << *something << "---";
+        something++;
+    }
+    cout << endl;
+}
+
+输出如下：
+l---i---l---y---
+l---u---c---y---
+j---o---h---n---
+```
+
+如果需要返回一个字符串，则可以使用new关键字，并将地址使用指针返回：
+
+```
+char* build_str(char, int);
+
+int main() 
+{
+    char* str = build_str('A',18);
+    cout << str << endl;
+    return 0;
+}
+
+char* build_str(char a,int times) {
+    char* res = new char[times+1];
+    res[times] = '\0';
+    while (times-- > 0) {
+        res[times] = a;
+    }
+    return res;
+}
+
+输出如下：
+AAAAAAAAAAAAAAAAAA
+```
+
+struct参数，如果function中有结构体参数的话，那么传入的结构体参数与普通的基本类型参数是一样的，都会copy出一份全新的变量，但是如果结构体很大的话，会浪费内存，并且会耗时，所以为了效率考虑的话，可以传入指针作为变量，代码如下：
+
+```
+struct people
+{
+    int age;
+    int height;
+};
+
+people getStruct1(people);
+void getStruct2(people*);
+
+int main() 
+{
+    people p = {18,165};
+    cout << " p age " << p.age << " , p height " << p.height << endl;
+    people p2 = getStruct1(p);
+    cout << " p age " << p2.age << " , p height " << p2.height << endl;
+    getStruct2(&p);
+    cout << " p age " << p.age << " , p height " << p.height << endl;
+    return 0;
+}
+
+people getStruct1(people p) {
+    p.age = 20;
+    people p2;
+    p2.age = 21;
+    p2.height = 168;
+    cout << "age changed" << endl;
+    return p2;
+}
+
+void getStruct2(people* p) {
+    p->height = 170;
+    cout << "height changed" << endl;
+}
+
+输出如下：
+ p age 18 , p height 165
+age changed
+ p age 21 , p height 168
+height changed
+ p age 18 , p height 170
+```
+
+Function指针也可以作为参数调用，有点像Java里的方法回调和kotlin中的Function类型的对象传入，使用方法就是要声明对应方法类型的指针，要明确返回值和传入的参数（即signature），具体使用方法如下：
+
+```
+int getHeight(int (*say)(char),char);
+
+int say1(char c);
+int say2(char c);
+
+int main() 
+{
+    cout << "say1 " << getHeight(say1,'a') << endl;
+    cout << "say2 " << getHeight(say2,'a') << endl;
+    return 0;
+}
+// 接受一个传入 char 类型的参数并返回一个 int 类型的值的函数指针
+int getHeight(int (*say)(char),char value) {
+    return say(value);
+}
+
+int say1(char c) {
+    return c * 1;
+}
+
+int say2(char c) {
+    return c * 2;
+}
+```
+
+inline函数，跟普通函数的区别就是，在编译器编译代码的时候，会将inline的函数体中的内容替换到调用函数的位置，而不是通过跳转到函数的地址执行代码后，再跳回来，这么做的好处就是可以减少代码执行时的函数地址切换的时间。但是inline函数的选用要慎重，因为如果inline的函数体代码很多，而且调用该函数的位置很多的话，就会使得代码的体积变大，因为凡是用到inline函数的地方都会被替换，其次就是，如果函数本身很耗时的话，那么相对于切换函数地址的耗时就相对较少了，不适合选用，而如果函数耗时极少，而且代码量小的话，那么就可以考虑使用inline函数做优化了，使用方式如下：
+
+```
+inline int sqrt(int a) 
+{
+    return a * a;
+}
+
+int main() 
+{
+    cout << sqrt(3) << endl;
+    return 0;
+}
+```
+
+Reference类型，使用Reference类型参数，可以避免struct或者class参数，在函数中copy出一份新的，如果想在改变调用者传入的参数的话，传统做法是使用指针，现在我们可以使用Reference完成同样的功能。使用如下：
+
+```
+void modify1(people&);
+void modify2(people);
+
+int main() 
+{
+    people a = {18,165};
+    modify2(a);
+    cout << a.age << endl;
+    modify1(a);
+    cout << a.age << endl;
+    return 0;
+}
+// 传入的reference，不会copy
+void modify1(people& source) {
+    source.age = 20;
+}
+// 传入的是value，会在内部重新copy一份
+void modify2(people source) {
+    source.age = 20;
+}
+
+输出如下:
+18
+20
+```
+
+default argument，在函数声明的时候，可以使用默认参数，这样默认参数就可以不传入而使用默认值了。声明的时候，只需要在prototype中写默认值就可以了，如下：
+
+```
+void say(char* word,int times=3);
+
+int main() 
+{
+    char a[5]; 
+    cin >> a;
+    say(a);
+    cout << "-------------" << endl;
+    say(a,5);
+    return 0;
+}
+
+void say(char* word,int times) {
+    int i=0;
+    while (i < times) {
+        cout << word << endl;
+        i++;
+    }
+}
+```
+
+function overloading，方法参数不同（包括类型不同或者参数不同），方法参数即为signature，这样compiler就能知道使用哪个方法了
+
+```
+void say(int a, int b);
+void say(char a);
+
+int main() 
+{
+    say(1,3);
+    say('a');
+    return 0;
+}
+
+void say(int a, int b) {
+    cout << "function1 " << a << "    " << b << endl;
+}
+
+void say(char a) {
+    cout << "function2 " << a << endl;
+}
+
+输出如下：
+function1 1    3
+function2 a
+```
+
+function template，其实就是java中的泛型，使用方法如下：
+
+```
+template<typename T>
+void Swap(T& a, T& b);
+
+int main() 
+{
+    int a = 1;
+    int b = 3;
+    Swap(a,b);
+    cout << " a is " << a << ", b is " << b << endl;
+    char c = 'c';
+    char d = 'd';
+    Swap(c,d);
+     cout << " c is " << c << ", d is " << d << endl;
+    return 0;
+}
+
+template<typename T>
+void Swap(T& a, T& b) 
+{
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+输出如下：
+ a is 3, b is 1
+ c is d, d is c
+```
+
+
+
+
+
+
+
+
