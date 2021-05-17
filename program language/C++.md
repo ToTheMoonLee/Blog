@@ -669,6 +669,222 @@ void Swap(T& a, T& b)
  c is d, d is c
 ```
 
+##### Memory Models and Namespaces
+
+将Function和Structure放到不同的文件时，需要用到header file头文件，header file可以写入的类型如下：
+
+* Function prototypes
+* Symbolic constants defined using #define or const 
+* Structure declarations
+* Class declarations
+* Template declarations 
+* Inline functions
+
+header file的使用：在头文件中声明了一个structure，同时声明了function prototype，这样就可以在两个文件中，使用同一个struture了。在header file中使用如下语法，可以避免多次引入同一个struture的问题。
+
+```
+#ifndef HEADER_TEST_
+#define HEADER_TEST_ 
+...
+#endif
+```
+
+代码如下：
+
+```
+文件1 file1.cpp
+#include <iostream>
+#include "header_test.h"
+
+using namespace std;
+
+void run() {
+    people p = {"lucy",21};
+    cout << p.name << " age is " << p.age << " run run run "  << endl;
+}
+
+文件2 practise.cpp
+#include <iostream>
+#include "header_test.h"
+
+int main() 
+{
+    using namespace std;
+  
+    people p = {"lily",20};
+    run();
+    cout << p.name << " main file age is " << p.age << endl;
+    return 0;
+}
+
+文件3 header_test.h	
+#ifndef HEADER_TEST_
+#define HEADER_TEST_
+struct people {
+    char* name;
+    int age;
+}; 
+
+void run();
+#endif
+```
+
+static 关键字，首先被static关键字修饰的变量，生命周期会一直持续到project执行结束。其次，变量声明的位置是有访问范围的，如果一个variable声明在block内，比如函数或者if判断的语句，那么这个variable就只能在block内被访问，如果一个variable声明在函数外，即放在文件中，那么任何文件都能访问到他，如果再在这个variable前面加上static，那么他的访问范围就被限制到了当前文件
+
+extern 关键字：如果一个值在Function外部声明的，那么他就是一个在所有文件中都能用的变量，使用方法如下（在file1.cpp中声明一个变量，在practise.cpp中使用，则需要在practise.cpp使用extern关键字）：
+
+```
+file1.cpp 
+
+#include <iostream>
+#include "header_test.h"
+
+using namespace std;
+int global = 100;
+void run() {
+    global = 2;
+    people p = {"lucy",21};
+    cout << p.name << " age is " << p.age << " run run run "  << endl;
+}
+
+practise.cpp
+
+#include <iostream>
+#include "header_test.h"
+extern int global;		// 在这里使用extern来说明使用全局变量
+int main() 
+{
+    using namespace std;
+  
+    cout << global << endl;
+    return 0;
+}
+```
+
+namespace：用来隔离文件与文件之间，或者library与library之间，命名相同名字的Function或者variable会出现冲突的问题，如果使用对应namespace的Function或者variable时，需要使用`::`来指定对应的namespace，代码如下：
+
+```
+#include <iostream>
+
+namespace Lily {
+    int a = 1;
+}
+
+namespace Lucy {
+    int a = 20;
+}
+
+using namespace std;
+
+int main() 
+{
+    cout << Lily::a << endl;
+    cout << Lucy::a << endl;
+    return 0;
+}
+
+```
+
+using：使用using关键字就可以避免每次在使用某个namespace时，都需要使用`Lily::a`这种方式去指定来。方法就是，在要使用的位置之前，使用`using Lily::a`先声明一下，如果该语句放在全局的变量的位置，那么就是全局变量，如果该语句放在block内，就是局部变量。也可以使用`using namespace Lily`来使用对应namespace中的全部变量，使用如下：
+
+```
+#include <iostream>
+
+namespace lily {
+    int a = 1;
+    int b = 2;
+}
+
+namespace lucy {
+    int a = 20;
+}
+// 可以使用这种方式给namespace起别名
+namespace girl = lily;
+using namespace std;
+using namespace lily;
+int main() 
+{
+    cout << a << endl;
+    cout << b << endl;
+    cout << lucy::a << endl;
+    return 0;
+}
+```
+
+namespace在多文件的项目中的用法如下：
+
+```
+// header_test.h 
+
+#ifndef HEADER_TEST_
+#define HEADER_TEST_
+
+namespace pers {
+    struct person {
+        char *name;
+        int age;
+    };
+
+    void showPerson(person &p);
+    void run(int distance);
+}
+
+namespace stu {
+    using namespace pers;
+    struct student {
+        person p;
+        int grade;
+    };
+
+    void showStudent(student * s);
+}
+#endif
+
+// file1.cpp
+
+#include <iostream>
+#include "header_test.h"
+
+using namespace std;
+
+namespace pers {
+    void showPerson(person &p) {
+        cout << "name is " << p.name << ", age is " << p.age << endl;;
+    }
+    void run(int distance) {
+        cout << "You have run " << distance << " km" << endl;
+    }
+}
+
+namespace stu {
+    void showStudent(student * s) {
+        cout << "name is " << s->p.name << ", age is " << s->p.age << ", grade is " << s->grade << endl;
+    }
+}
+
+// practise.cpp 
+
+#include <iostream>
+#include "header_test.h"
+
+using namespace pers;
+using stu::student;
+
+int main() 
+{
+    using stu::showStudent;
+    person p = {"lily",21};
+    showPerson(p);
+    person p1 = {"lucy",22};
+    student s = {p1,15};
+    showStudent(&s);
+    return 0;
+}
+```
+
+class and class implementation，class declaration可以放在头文件中，而class implementation放在另一个文件中，在class implementation中需要使用`::`来指明实现的方法属于哪个类：
+
+
 
 
 
