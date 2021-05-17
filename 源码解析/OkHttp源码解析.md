@@ -195,7 +195,7 @@ override fun run() {
 3. 同时也会finishi中再次调用`client.dispatcher.finished()`进而调用`promoteAndExecute()`来继续之后的call的调用
 
 到此先进行一下小小的总结
-![okhttp](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/okhttp.png)
+![okhttp](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/okhttp.png)
 整体执行流程如上图所示。最终还是会使用线程池来调用相关方法，但是核心方法是`getResponseWithInterceptorChain()`。
 
 总结一下几个核心类，OkHttpClient的作用就是作为一个大管家，来进行各种参数的统一配置，比如配置各种超时的参数、设置自定义的interceptor（可以用来统一添加请求头）、添加EventListener来监听网络请求过程中每个阶段的数据等等。Request封装了url、method、body等参数。真正执行逻辑的是RealCall，RealCall中包含了最开始初始化的OkHttpClient和Request。
@@ -373,12 +373,12 @@ override fun intercept(chain: Interceptor.Chain): Response {
 
 到这里，我们先总结一下这个链条工作起来的流程，假设只有两个interceptor，如图：
 
-![interceptor-chain](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/interceptor-chain.jpg)
+![interceptor-chain](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/interceptor-chain.jpg)
 
 在interceptor的链条中，每个拦截器都会先执行自己的前置工作，然后调用chain.proceed向前推动链条，之后等到下一个拦截器返回结果，待下一个拦截器返回结果之后，在执行自己的后置工作。就这样一步步的完成最终的response返回。
 
 下面这张是抽象的链条工作模型
-![chain](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/chain.jpg)
+![chain](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/chain.jpg)
 
 
 至此，我们大概有一个OkHttp的大框架了。首先OkHttpClient会使用request初始化一个RealCall，然后RealCall会调用enqueue方法，enqueue内部实际执行的是Dispatcher的enqueue（这里实际传入了AsyncCall，他是RealCall的内部类），这里就使用了线程池来执行RealCall的内部类，AsyncCall的runnable方法。而在AsyncCall的run方法中，会执行getResponseWithInterceptorChain()来触发拦截器链条的执行，每一个拦截器各司其职，会进行相应的前置工作，推进链条，后置工作。进而得到最终的response，然后执行我们的callback方法。
@@ -488,7 +488,7 @@ override fun intercept(chain: Interceptor.Chain): Response {
 
 工作流程图如下
 
-![retry-and-follow-up-interceptor](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/retry-and-follow-up-interceptor.jpg)
+![retry-and-follow-up-interceptor](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/retry-and-follow-up-interceptor.jpg)
 
 接下来我们继续看下一个interceptor
 
@@ -1001,16 +1001,16 @@ fun callAcquirePooledConnection(
 
 解释一下`RouteSelector`、`RouteSelector.Selection`、`routes: List<Route>`、`route: Route`、`Address`的概念，如图所示：
 
-![routeselector](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/routeselector.jpg)
+![routeselector](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/routeselector.jpg)
 
-![connection-reusing](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/connection-reusing.jpg)
+![connection-reusing](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/connection-reusing.jpg)
 
 我们知道，我们在请求一个url的时候，主要由三部分组成，ip地址，端口号，还有代理方式（分为直连或者使用代理服务器连接）。ip地址可用由域名解析，一个域名可以解析出多个ip，而端口号则在我们访问url的时候就定下来了，比如http端口为80，https为443等。所以Okhttp则对这些数据进行了封装，首先Address类中，封装了host、port、DNS、HostnameVerifier等等一些列的信息，用来描述连接地址。而Route则是一个路由，用来描述我们访问一个url的时候做经过的路线是什么样的，是直接连到服务器呢，还是要经过一个代理服务器进行转发呢，Route中封装了Address类。而一个RouteSelector.Selection封装了一个路由的list，但是他们都是属于同一种代理方式的，而一个RouteSelector则封装了多个RouteSelector.Selection，所以在进行可用Route的搜索时，则会先从RouteSelector找到RouteSelector.Selection，再从RouteSelector.Selection中找到Route。具体的结构则如上图所示，并且下面那张图也可以看出多条路径，也就是多条Route。
 
 接下来解释连接合并：
 连接合并是Http2的概念，因为多个域名是可以配置到同一个IP地址上的，所以当我们虽然域名不一样，但是要访问的IP地址一样时，在http2的时候，就可以进行连接合并，使用同一个连接进行传输。但是有一个特殊情况，就是虚拟主机的情况，如图：
 
-![virtual-host](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/virtual-host.jpg)
+![virtual-host](https://github.com/ToTheMoonLee/Blog/blob/main/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/media/okhttp/virtual-host.jpg)
 
 当有虚拟主机的话，虽然也是不同域名，但是是同一个IP，但是这个时候Route明显不同，所以这个时候，应该考虑再校验一下网站的证书是否一致，也即是我们在isEligible()方法中的逻辑。
 
