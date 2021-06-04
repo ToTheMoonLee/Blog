@@ -20,7 +20,7 @@ hello.cpp --> compiler --> hello.o --> linker --> hello.out
 有些功能是C++的library已经定义好的，我们可以直接拿来用，但是需要include一个头文件。
 同时，为了避免在使用功能函数时混淆的问题，则使用了 using namespace 的方式，类似于Java的包名。
 io功能需要引入头文件`#include <iostream>`，同时需要`using namespace std`，如果不写`using namespace std`，则调用的时候，需要写全名。
-输出使用 cout ,输入使用 cin。C++中输入和输出抽象为流，"<<"">>"可以表示流向，"<<"">>"为运算符重栽。代码如下：
+输出使用 cout ,输入使用 cin。C++中输入和输出抽象为流，"<<"">>"可以表示流向，"<<"">>"为运算符重载。代码如下：
 
 ```
 #include <iostream>
@@ -50,7 +50,7 @@ your name is lily
 
 char/short/int/long/long long/float/double，各种类型还有对应的unsigned类型，即无符号类型。默认的都是有符号类型。两者的区别就是表示范围不一样，比如short是 -32768~32767，而unsigned short是0~65535
 bool类型true or false，在C++中，0表示false，非0表示true
-char name[10] = "lily" 在char数组中的存储方式为 l,i,l,y,\0, _ , _ , _ , _ ,_ 会多存一个\0来表示字符结束
+char name[10] = "lily" 在char数组中的存储方式为 l,i,l,y,\0, _ , _ , _ , _ ,_ 会多存一个\0来表示字符结束。真正在内存中是ASCII编码之后，实际存入bit位
 
 ```
     char c = 'a';
@@ -97,7 +97,7 @@ int main()
 }
 ```
 
-union可以声明多种类型，但是只能有一种类型生效，主要是为了节省内存，比如有一个id，类型可以是int，也可以是long，但是如果直接声明成long，则可能造成浪费，所以可以使用union，见代码
+union可以声明多种类型，但是只能有一种类型生效，主要是为了节省内存，比如有一个id，类型可以是int，也可以是double，但是如果直接声明成double，则可能造成浪费，所以可以使用union，见代码
 
 ```
 int main() 
@@ -118,7 +118,7 @@ int main()
 -1717986918    14.3
 ```
 
-enum跟java中的enum类似，值默认从0开始一次递增
+enum跟java中的enum类似，值默认从0开始依次递增
 
 ```
 int main() 
@@ -132,6 +132,7 @@ int main()
     cout << c << endl;
 }
 输出 
+1 
 ```
 
 pointer可以说是C++的灵魂，指针是用来保存内存地址的，普通的变量可以有变量名，使用变量名就可以访问变量值，但是如果是新申请的一段内存，是没有名字的，这个时候就可以使用pointer类型来对这片内存进行跟踪。在C++中可以使用new和delete来申请和释放内存。同时，指针也是有类型，什么样的指针就保存什么样的类型的内存地址。如果指针指向的是结构体类型，则可以使用 -> 来获取变量，具体使用见代码。
@@ -543,7 +544,7 @@ int say2(char c) {
 }
 ```
 
-inline函数，跟普通函数的区别就是，在编译器编译代码的时候，会将inline的函数体中的内容替换到调用函数的位置，而不是通过跳转到函数的地址执行代码后，再跳回来，这么做的好处就是可以减少代码执行时的函数地址切换的时间。但是inline函数的选用要慎重，因为如果inline的函数体代码很多，而且调用该函数的位置很多的话，就会使得代码的体积变大，因为凡是用到inline函数的地方都会被替换，其次就是，如果函数本身很耗时的话，那么相对于切换函数地址的耗时就相对较少了，不适合选用，而如果函数耗时极少，而且代码量小的话，那么就可以考虑使用inline函数做优化了，使用方式如下：
+inline函数，跟普通函数的区别就是，在编译器编译代码的时候，会将inline的函数体中的内容替换到调用函数的位置，而不是通过跳转到函数的地址执行代码后，再跳回来，这么做的好处就是可以减少代码执行时的函数地址切换的时间。但是inline函数的选用要慎重，因为如果inline的函数体代码很多，而且调用该函数的位置很多的话，就会使得代码的体积变大，因为凡是用到inline函数的地方都会被替换；其次就是，如果函数本身很耗时的话，那么相对于切换函数地址的耗时就相对较少了，不适合选用，而如果函数耗时极少，而且代码量小的话，那么就可以考虑使用inline函数做优化了，使用方式如下：
 
 ```
 inline int sqrt(int a) 
@@ -882,7 +883,204 @@ int main()
 }
 ```
 
-class and class implementation，class declaration可以放在头文件中，而class implementation放在另一个文件中，在class implementation中需要使用`::`来指明实现的方法属于哪个类：
+class and class implementation，class declaration可以放在header file中，而class implementation放在另一个source file中。在类的声明中，同样有权限修饰符，public，protected，private，默认的权限修饰符是private的，功能与java类似。权限修饰符可以将数据的访问隐藏，而将class的声明和实现分别放在不同的文件，也是对类进行了封装，只暴露出接口，而不暴露出实现细节。而且function定义好之后，使用者并不需要关心是如何实现的，如果class的定义者想要改某个function的实现方式了，直接修改实现就可以了，而class的使用者是无感知的，便于维护。在class implementation中（也就是在.cpp的文件中），需要使用`::`来指明实现的方法属于哪个类，因为同一个方法可能会在不同的class中重名。具体代码如下：
+
+```
+// 头文件 header.h
+
+#ifndef HEADER_TEST_
+#define HEADER_TEST_
+
+#include<string>
+
+class Person {
+    // 默认是private
+    int id;
+    private:
+    std::string name;
+    int age;
+    int height;
+    int weight;
+    int add(int extra_weight) {
+        weight += extra_weight;
+        return weight;
+    }
+
+    public:
+    void run();
+    int getHeight();
+    int addWeight(int extra_weight);
+};
+#endif
+
+// 源文件header.cpp
+
+#include <iostream>
+#include "header_test.h"
+
+using namespace std;
+// 需要使用Person::run()来指明run方法具体属于哪个类
+void Person::run() {
+    cout << " One person is running" << endl;
+}
+
+int Person::getHeight() {
+    return height;
+}
+
+int Person::addWeight(int extra_weight) {
+    return add(extra_weight);
+}
+
+// main.cpp
+
+#include <iostream>
+#include "header_test.h"
+
+int main() 
+{
+    Person p;
+    p.run();
+
+    return 0;
+
+}
+```
+
+constructor and destructor：constructor（构造方法）与java的构造方法类似，如果我们不提供的话，compiler会提供一个默认的无参数的constructor，如果要是我们提供了一个constructor，那么编译器就不会给我提供默认的构造方法了。constructor的声明方法与java类似。与java不同的一点是，destructor是当对象销毁的时候会默认调用的一个方法，一般会在以下场景下被调用：1. 如果创造的对象是一个static storage的对象（比如：static Person p )，那么destructor会在程序结束的时候被自动调用；2. 如果创建的是一个automatic storage的对象（比如 Person p），那么destructor会在声明该对象的方法block结束时被调用；3. 如果使用new来初始化的对象（比如 Person *p = new Person()），那么在调用delete的时候，destructor会被调用。destructor的声明方法为，以Person类为例：~Person()，在前面加一个"~"即可。具体代码如下：
+
+```
+// header_test.h
+
+#ifndef HEADER_TEST_
+#define HEADER_TEST_
+
+#include<string>
+using namespace std;
+class Person {
+    // 默认是private
+    int id;
+    private:
+    std::string name;
+    int age;
+    int *height;
+    int weight;
+    int add(int extra_weight) {
+        weight += extra_weight;
+        return weight;
+    }
+
+    public:
+    // 声明默认的构造方法
+    Person();
+    // 声明带参数的构造方法
+    Person(int age,string &name);
+    // 声明destructor
+    ~Person();
+    void run();
+    int addWeight(int extra_weight);
+};
+#endif
+
+// header.cpp
+
+#include <iostream>
+#include "header_test.h"
+
+using namespace std;
+
+void Person::run() {
+    cout << " One person is running" << endl;
+}
+
+int Person::addWeight(int extra_weight) {
+    return add(extra_weight);
+}
+
+// 构造方法的实现
+Person::Person(int age,string &name) {
+    this->age = age;
+    this->name = name;
+    height = new int;
+    cout << "constructor is invoked" << endl;
+}
+
+// destructor的实现
+Person::~Person() {
+    cout << "before address is " << height << endl;
+    delete height;
+    cout << "end address is " << height << endl;
+}
+
+// practise.cpp
+
+#include <iostream>
+#include "header_test.h"
+
+int main() 
+{
+    string name = "lily";
+    string name2 = "lucy";
+    string name3 = "john";
+    // 初始化方式1
+    Person p = Person(21,name);
+    // 初始化方式2
+    Person p2(22,name2);
+    // 初始化方式3
+    Person *p3 = new Person(24,name3);
+    p.run();
+    p2.run();
+}
+```
+
+如果直接赋值的话，比如`p = p2`，这句代码会将p2中的内容全部复制到p1的对象里（这里要跟java有所区别，并不是复制地址）。
+const修饰成员方法，如果声明的对象为const，则调用的方法也应该为const方法，如下：
+
+```
+
+#ifndef HEADER_TEST_
+#define HEADER_TEST_
+
+#include<string>
+using namespace std;
+class Person {
+    ... 
+    public:
+    // 非const的run()方法
+    void run();
+   
+};
+#endif
+
+#include <iostream>
+#include "header_test.h"
+
+int main() 
+{
+    string name = "lily";
+    string name2 = "lucy";
+    const Person p(21,name);
+    // 调用非const的run方法会报错
+    // p.run();
+    return 0;
+
+}
+
+// 将run()方法修改为如下即可
+void run() const;
+```
+
+this指针的使用，this指针指向了调用方法的对象，而this的值就是调用方法的对象的地址。比如Person类中有个方法是比较两个Person的年龄，并返回年龄大的那个Person的对象，那么就可以如下实现：
+
+```
+Person & Person::getMax(Person &p) {
+    if (p.age > age) {
+        return p;
+    } else {
+        return *this;
+    }
+}
+```
 
 
 
