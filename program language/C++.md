@@ -1082,8 +1082,251 @@ Person & Person::getMax(Person &p) {
 }
 ```
 
+Operator Overloading（运算符重载）：顾名思义，就是将运算符的作用重新定义。比如`*`操作符，如果放在某个指针变量前（如p为一个int类型的指针变量，`*p`就可以取出p的地址中的数据）；而如果是在两个操作数中间，则表示乘法（如`int a = b * c;`)。java中是没有运算符重载的。值得注意的一点是，运算符重载只可以重载c++支持的运算符，比如+、-、*、[]等。具体重载的方式就是使用特定的方法形式`
+operatorop(argument-list)`，其中`op`就是要重载的操作符，argument-list是传入的参数，比如要重写`+`操作符，则就可以写为`operator+()`的形式。而内部具体的实现则与普通的方法无异，具体代码如下(直接贴出Time.cpp的文件）：
 
+```
+// Time.cpp
 
+#include <iostream>
+#include "time_header.h"
+
+using namespace std;
+
+void Time::show() {
+    cout << "hours is " << hours << ", minutes is " << minutes << endl;
+}
+
+Time Time::add(Time &t) {
+    int newM = minutes + t.minutes;
+    int newH = hours + t.hours + newM/60;
+    newM %= 60;
+    return Time(newH,newM);
+}
+
+Time Time::operator+(Time &t) {
+    int newM = minutes + t.minutes;
+    int newH = hours + t.hours + newM/60;
+    newM %= 60;
+    return Time(newH,newM);
+}
+
+// practise.cpp
+
+#include "time_header.h"
+int main() 
+{
+    Time t1(1,30);
+    Time t2(2,31);
+    Time t3 = t1.add(t2);
+    // 运算符重载方法可以这样调用
+    Time t4 = t1.operator+(t2);
+    // 当然最好的方式，就是这样调用
+    Time t5 = t1 + t2;
+    t3.show();
+    t4.show();
+    t5.show();
+    return 0;
+
+}
+
+输出结果如下：
+hours is 4, minutes is 1
+hours is 4, minutes is 1
+hours is 4, minutes is 1
+```
+
+可以重载的运算符如下：
+
+```
++	-	*	/	%	^&	|	~	!	=	<> 	+= 	-= 	*= 	/=	 %=^=	 &= 	|=	 <<	 >>	 >>=<<= 	== 	!=	 <= 	>= 	&&||	 ++ 	-- 	, 	->* 	->()	 [] 	new 	delete 	new []  delete []
+```
+
+friend function：一种用来定义非成员方法，而还拥有访问成员变量的方法。一个使用场景就是，在运算符重载的时候，我们必须将有运算符重载的方法放到前面。例如：在Time类中，有一个运算符重载方法`operator+(int minutes)`，那么我们在使用时，方式为`Time t1,t2; t2 = t1+20;`，但是如果我们想写成 ` t2= 20+t1;`则会出问题，因为这句代码会被翻译为`20.operator+(Time t1);`，而很显然int类型的20并没有这个方法，所以这个时候，我就可以使用friend function了，具体如下：
+
+```
+// Time.h
+
+#ifndef TIME_H_
+#define TIME_H_
+class Time
+{
+private:
+    int hours;
+    int minutes;
+public:
+    Time(int h, int m);
+    ~Time();
+    void show();
+    friend Time operator+(int minutes,Time &t);
+};
+#endif
+
+// Time.cpp
+#include <iostream>
+#include "time_header.h"
+
+using namespace std;
+
+void Time::show() {
+    cout << "hours is " << hours << ", minutes is " << minutes << endl;
+}
+
+Time operator+(int minutes,Time &t) {
+    int newM = t.minutes + minutes;
+    return Time(t.hours,newM);
+}
+
+Time::Time(int h, int m)
+{
+    hours = h;
+    minutes = m;
+}
+
+Time::~Time()
+{
+}
+
+// practice.cpp
+
+#include "Time.h"
+int main() 
+{
+    Time t1(1,30);
+    Time t2 = 3 + t1;
+    t2.show();
+    return 0;
+
+}
+
+输出如下：
+hours is 1, minutes is 33
+```
+
+使用friend function来重载`<<`，当我们使用c++输出时，我们用到了`cout << "1" << endl;`，那么能不能把上面的`show()`方法也改成`cout << t1 << endl;`的形式呢？当然是可以的。同样，我们使用friend function就可以实现，值得注意的是，为了链式调用，我们需要返回一个`ostream`的一个引用，代码如下：
+
+```
+// Time.h
+
+#ifndef TIME_H_
+#define TIME_H_
+#include <iostream>
+class Time
+{
+private:
+    int hours;
+    int minutes;
+public:
+    Time(int h, int m);
+    ~Time();
+    friend Time operator+(int minutes,Time &t);
+    friend std::ostream & operator<<(std::ostream & out,Time &t);
+};
+#endif
+
+// Time.cpp
+#include <iostream>
+#include "Time.h"
+
+using namespace std;
+
+Time operator+(int minutes,Time &t) {
+    int newM = t.minutes + minutes;
+    return Time(t.hours,newM);
+}
+
+ostream & operator<<(ostream &out,Time &t) {
+    out << "hours is " << t.hours << ", minutes is " << t.minutes ;
+    return out;
+}
+
+// practice.cpp
+
+#include "Time.h"
+#include <iostream>
+
+int main() 
+{
+    using namespace std;
+    Time t1(1,30);
+    Time t2 = 3 + t1;
+    cout << "Time " << t2 << endl;
+    return 0;
+
+}
+```
+
+Automatic Conversion，自动类型转换，在C++中，是可以进行自动类型转换的，在这点上，C++比Java的自动类型转换更进一步，例如：`int a = 3.3;`，这个代码在C++中是允许的，最终a会被赋值为3，失去0.3的精度。而且C++中不只是基本数据类型可以这样自动转换，我们自己定义的Class也可以实现自动类型转换，规则就是，如果我们定义的构造方法中，**只有一个参数,或者有多个参数，但是只有一个参数没有默认值，其余参数均有默认值**（注意，只有一个参数或者带有默认参数的的方法才可以推断出自动类型转换），比如`Time(int h);`那么`Time t = 3;`这句代码就是合法的，而这句代码实质上是首先会根据数字3来调用`Time(3)`构造一个临时的Time类型的对象，然后将这个临时对象中的hours = 3赋值给t这个对象中的hours变量。同时我们也可以使用explicit来禁止这种隐式的自动类型转换，但是我们还是可以进行显式的自动类型转换。具体代码如下：
+
+```
+// Time.h 直接贴出 .h的代码
+public:
+    Time(int h);
+    // Time(int h, int m = 2);
+
+// practise.cpp
+
+#include "Time.h"
+#include <iostream>
+
+int main() 
+{
+    using namespace std;
+    Time t = 4;
+    cout << "Time " << t << endl;
+    return 0;
+
+}
+
+输出为：
+Time hours is 4, minutes is 0
+
+假如构造方法前加上explicit关键字
+// Time.h
+public:
+	explicit Time(int h);
+则Time t = 4;就是非法的了
+但是 Time t = (Time)4；依然是没问题的
+```
+
+Conversion Function，如果我们想把我们定义的Class转换成其他类型的话，比如`Time t = Time(2,3); double d = t;`，那么我们就需要加入Conversion Function，其语法为 `operator typeName();`，比如我们要把Time类转换为double，那么定义的方法为`operator double()`，而使用的话，与C++的其他类型推断或者类型强制转换的语法无异。具体代码如下：
+
+```
+// Time.h 
+    operator double();
+    operator int();
+    
+// Time.cpp
+Time::operator double() {
+    return hours;
+}
+
+Time::operator int() {
+    return minutes;
+}
+
+// practise.cpp
+#include "Time.h"
+#include <iostream>
+
+int main() 
+{
+    using namespace std;
+    Time t1(1,30);
+    Time t2 = 3;
+    // 这里是三种类型转换的形式，第一个是隐式的，后面两种是显式的
+    double d = t2;
+    // int i = int(t1);
+    int i = (int)t1;
+    cout << "double is  " << d << endl;
+    cout << "int is " << i << endl;
+    return 0;
+
+}
+输出结果为：
+double is  3
+int is 30
+```
 
 
 
