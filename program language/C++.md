@@ -883,6 +883,8 @@ int main()
 }
 ```
 
+##### Objects and Classes
+
 class and class implementation，class declaration可以放在header file中，而class implementation放在另一个source file中。在类的声明中，同样有权限修饰符，public，protected，private，默认的权限修饰符是private的，功能与java类似。权限修饰符可以将数据的访问隐藏，而将class的声明和实现分别放在不同的文件，也是对类进行了封装，只暴露出接口，而不暴露出实现细节。而且function定义好之后，使用者并不需要关心是如何实现的，如果class的定义者想要改某个function的实现方式了，直接修改实现就可以了，而class的使用者是无感知的，便于维护。在class implementation中（也就是在.cpp的文件中），需要使用`::`来指明实现的方法属于哪个类，因为同一个方法可能会在不同的class中重名。具体代码如下：
 
 ```
@@ -1328,8 +1330,206 @@ double is  3
 int is 30
 ```
 
+##### Classes and Dynamic Memory Allocation
 
+C++ Primer Plus P628，展示了一个由于编译器自动生成了默认成员方法，导致的细节的问题，直接查看即可。总结一下，在Class中，我们可以使用动态申请内存的方式，去存储数据。比如，我们要存储一个名字，但是名字的长度可能是会变的，所以我们可以使用一个指针变量，在constructor中动态的使用new关键字根据name的长度去申请内存，而不是在编译期的时候，就定死这个name需要占用的内存，从而节省内存，但是切记在destructor中使用delete去释放内存。
 
+通常，C++会动态的生成以下五种成员方法：
+
+1. 如果没有定义constrctor，会生成一个默认的constructor
+2. 如果没有定义destructor，会生一个destructor
+3. 如果没有定义copy constructor，会生成一个copy constructor
+4. 如果没有定义assingment operator，会生成一个assignment operator
+5. 如果没有定义address operator，会生成一个address operator
+
+Copy Constructors：当复制一个对象到新创建的对象的时候被使用。比如通过传递value的方式，传递方法参数。Copy Constructor的prototype为：`Class_name(const Class_name &);`，例如：`People(const People &);`，以下几种场景会调用Copy Constructor：
+// p是一个People类型的对象
+1. People p2(p);
+2. People p2 = p;
+3. People p2 = People(p);
+4. People * ppointer = new People(p)
+
+Copy Constructor本质上做的事，就是把一个对象的成员copy到新的对象的成员上，但是只是非static的成员会copy。但是默认的Copy Constructor是shallow copy（浅拷贝），如变量中使用了string的指针，则只会拷贝地址。例如：
+
+```
+People p2 = p
+// 就相当于做了如下操作
+People p2;
+p2.age = p.age;
+p2.name = p.name;
+```
+
+而如果浅拷贝会造成指向同一个地址的string，被销毁了两次，那么我们可以进行deep copy（深拷贝）
+
+Assignment Operators：如果我们将一个对象赋值到已经存在的对象，那么Assignment operator就会被使用，同样的，如果我们没有显式的提供Assignment Operator，编译器就会帮我们默认生成一个，如下代码：
+
+```
+People p(21,"lucy");
+People p2(22,"lily");
+p2 = p;
+```
+
+Assignment operator形式为`Class_name & Class_name::operator=(const Class_name &);
+`， 具体的例子比如：`people & operator=(const people & P);`。我们也需要显示的给出Assignment Operator，避免不必要的错误。
+
+```
+// people.h
+
+#ifndef PEOPLE_H_
+#define PEOPLE_H_
+
+class people
+{
+private:
+    int age;
+    char * name;
+public:
+    people(int age, char * name);
+    ~people();
+    people(const people & p); // copy constructor
+    people & operator=(const people & P); // Assignment Constructor
+    people operator+(people & p);
+    char * getName();
+};
+#endif
+
+// people.cpp
+
+#include "people.h"
+#include <cstring>
+#include <iostream>
+
+using namespace std;
+
+people::people(int age, char* name) {
+    this->age = age;
+    int len = strlen(name);
+    this->name = new char[len+1];
+    strcpy(this->name,name);
+    cout << "constructor invoked" << endl;
+}
+
+people::~people() {
+    cout << "deconstructor invoked" << endl;
+    delete name;
+}
+
+// 如果不进行深拷贝，则会造成已经释放的空间被再次释放
+people::people(const people & p) {
+    cout << "copy constructor invoked" << endl;
+    int len = strlen(p.name);
+    this->name = new char[len+1];
+    strcpy(this->name,p.name);
+}
+
+// assignment constructor 使用深拷贝
+people & people::operator=(const people & p) {
+    if (this == &p) {
+        return *this;
+    }
+    delete name;
+    int len = strlen(p.name);
+    name = new char[len+1];
+    strcpy(name,p.name);
+    return *this;
+}
+
+char * people::getName() {
+    return this->name;
+}
+
+// practise.cpp
+
+#include "people.h"
+#include <iostream>
+
+int main() 
+{
+    using namespace std;
+    people p1(21,"lily");
+    cout << "p2 name " << p1.getName() << endl;
+    people p2 = p1;
+    cout << "p2 name " << p2.getName() << endl;
+    return 0;
+
+}
+```
+
+Static Class Member Function：我们可以在一个Class中声明static的成员方法，有两个结果：低一点，static member function不能被一个对象调用，需要使用类名调用，语法是：`people::getTotal();`。第二点，静态方法中只能使用静态变量。
+
+在Constructor中使用new关键字时，通常要记住以下几点：
+1. 如果在Constructor中使用了new，那么就需要在destructor中使用delete
+2. new和delete需要相匹配，new和delete 或者 new [] 和 delete [] 各为一对
+3. 如果在多个Constructor中使用new时，应该保持一致，使用new 或者使用 new []
+4. 在写一个类时，也要注意定义一个copy constructor，并进行深拷贝
+5. 通常要需要定义assignment operator，并进行深拷贝，通常需要检查是否是自己在赋值给自己`if (this == &st) return *this;`，而且需要释放这个对象中的指针指向的内存。
+
+> tips：通常空指针可以使用`0`或者`NULL`来表示，在C++11中，可以使用`nullptr`
+
+返回object还是reference，见P662
+
+Pointer的总结：
+1. 声明一个指针： `String *strptr`
+2. 初始化一个指针到已经存在的对象：`String *strptr = &test[0]`
+3. 使用默认构造初始化一个指针：`String *strptr = new String;`
+4. 匹配String(const char*)初始化指针：`String *strptr = new String("test");`
+5. 匹配String(const String &)初始化指针：`String *strptr = new String(test[0]);`
+6. 使用 -> operator访问方法：`strptr->length()`
+7. 使用 * deferencing operator获取指向的对象：`*str`
+
+placement new初始化pointer，直接上代码：
+
+```
+    char * block= new char[256];
+    string * p1 = new string("lily");
+    // 将要创建的对象创建到申请的block的内存上
+    string * p2 = new (block) string("lucy");
+    cout << "p1 -- " << p1 << ", p2 " << p2 << endl;
+
+    string * p3 = new string("lily");
+    // 将要创建的对象创建到申请的block的内存上
+    string * p4 = new (block) string("lucy");
+    cout << "p3 -- " << p3 << ", p4 " << p4 << endl;
+```
+
+打印如下：
+p1 -- 0x7fa5af402a70, p2 0x7fa5af402970
+p3 -- 0x7fa5af402a90, p4 0x7fa5af402970
+p2和p4的内存是一样的，因为都将对象新建到了同一个位置，而且在释放内存的时候，如果只是释放了block的内存，string的destructor是不会调用的，这种情况需要手动释放，如下：
+
+```
+    char * block= new char[256];
+    string * p1 = new string("lily");
+    string * p2 = new (block) string("lucy");
+    cout << "p1 -- " << p1 << ", p2 " << p2 << endl;
+
+    string * p3 = new string("lily");
+    // 使用sizeof，对对象创建的位置偏移
+    string * p4 = new (block + sizeof(p2)) string("lucy");
+    cout << "p3 -- " << p3 << ", p4 " << p4 << endl;
+
+    delete p1;
+    delete p3;
+    // 手动调用destructor
+    p2->~string();
+    p4->~string();
+    delete [] block;
+
+```
+
+initializer list syntax: 可以使用初始化列表，在构造方法的内部代码调用前，初始化成员变量。代码如下：
+
+```
+// age(a)，变量名加括号，括号内就是要初始化的值，可以跟多个，比如age(a),name(name)
+people::people(int a, char* n) : age(a){
+    int len = strlen(name);
+    this->name = new char[len+1];
+    strcpy(this->name,name);
+    cout << "constructor invoked" << endl;
+}
+```
+
+##### Class Inheritance
 
 
 
