@@ -2,7 +2,7 @@
 
 ### 内存模型
 
-![Java内存模型](/Users/lixiangyue/Personal/blog/Blog/JVM/runtime_data_region.jpg)
+![Java内存模型](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/runtime_data_region.jpg)
 
 ##### 程序计数器
 
@@ -65,9 +65,9 @@
 
 ##### 对象的访问
 
-![handle_access](/Users/lixiangyue/Personal/blog/Blog/JVM/handle_access.jpg)
+![handle_access](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/handle_access.jpg)
 
-![pointer_access](/Users/lixiangyue/Personal/blog/Blog/JVM/pointer_access.jpg)
+![pointer_access](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/pointer_access.jpg)
 
 1. 实现对象访问就是要使用栈上的局部变量表里的refrence来操作具体的对象，具体的方式有两种：第一种，使用句柄的方式访问；第二种，使用直接指针的方式来访问。具体见上图。
 2. 两种方式各有优势：句柄方式在对象移动时，只需要改变句柄池中的引用地址；而直接指针的方式不需要二次指针定位的开销
@@ -87,7 +87,7 @@
 
 Java中使用的算法。所谓可达性分析，就是从一系列称为“GC Roots”的根节点作为起始点，从这些节点开始向下搜索，搜索走过的路程叫做引用链（Reference Chain），如果某个对象没有任何引用链与其相连，则表示该对象不再被使用。如图：
 
-![Reachability](/Users/lixiangyue/Personal/blog/Blog/JVM/reachability_analysis.jpg)
+![Reachability](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/reachability_analysis.jpg)
 
 可以作为GC Roots的对象有：
 1. **在虚拟机栈帧中引用的对象**：方法栈帧中使用到的参数、局部变量、临时变量等
@@ -127,13 +127,13 @@ Java中使用的算法。所谓可达性分析，就是从一系列称为“GC R
   优点：实现简单
   缺点：1. 效率不稳定，随着对象的增长效率下降；2. 会产生内存碎片
   
-  ![mark_sweep](/Users/lixiangyue/Personal/blog/Blog/JVM/mark_sweep.jpg)
+  ![mark_sweep](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/mark_sweep.jpg)
   
 * **标记-复制算法（Semispace copying）**：最简单的实现是将内存区域分平均分为两块，当其中一块用完之后，将还存活的对象复制到另一块上，同时将当前这块内存清除。
   优点：实现简单，内存连续
   缺点：浪费了一半内存
   
-  ![semispace_copying](/Users/lixiangyue/Personal/blog/Blog/JVM/semispace_copying.jpg)
+  ![semispace_copying](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/semispace_copying.jpg)
   
   改进型的实现：将内存按照8:1:1的比例分为Eden区和两个suvivoer区，最初时使用Eden和其中一个Suvivor区，当启用垃圾收集时，将存活的对象复制到另一个Suvivor区，然后直接清掉Eden和当前的suvivor区。当然如果存活的对象大小超过了一个suvivor区的大小，就会启动Handle Promotion分配担保机制，一般会直接将其分配到Old Generation。
   
@@ -141,7 +141,7 @@ Java中使用的算法。所谓可达性分析，就是从一系列称为“GC R
   优点：内存连续
   缺点：移动时需要暂停用户应用
   
-  ![mark_compact](/Users/lixiangyue/Personal/blog/Blog/JVM/mark_compact.jpg)
+  ![mark_compact](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/mark_compact.jpg)
   
 ### 类文件结构
 
@@ -149,7 +149,7 @@ Java中使用的算法。所谓可达性分析，就是从一系列称为“GC R
 
 JVM即是平台无关也，也是语言无关的，无论是x86还是arm架构的平台，无论是java语言、kotlin语言还是其他语言，只要最终给JVM有效的Class文件，就能在这些平台上执行
 
-![jvm_class_code](/Users/lixiangyue/Personal/blog/Blog/JVM/jvm_class_code.jpg)
+![jvm_class_code](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/jvm_class_code.jpg)
 
 ##### Class类文件结构
 
@@ -159,9 +159,9 @@ JVM即是平台无关也，也是语言无关的，无论是x86还是arm架构�
 4. “Class文件格式”不一定要以文件的形式存在
 5. Class Code中，各个数据项无论是类型，长度，顺序，大小都是严格定义好的，见下图。
 
-![class_code_table](/Users/lixiangyue/Personal/blog/Blog/JVM/class_code_table.jpg)
+![class_code_table](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/class_code_table.jpg)
 
-![class_code_image](/Users/lixiangyue/Personal/blog/Blog/JVM/class_code_image.jpg)
+![class_code_image](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/class_code_image.jpg)
 
 ##### magic number和版本
 
@@ -179,15 +179,15 @@ magic number：占用前四个字节，内容固定为CAFEBABE，用来标志文
 7. 可以使用`javap -verbose HelloJVM` （HelloJVM为编译的class文件名）
 8. 一些譬如“I”、“V”、“<init>”等字符串常量，是编译器自动生成的，用来表示方法的返回值，字段类型等等信息
 
-![constant_table_type](/Users/lixiangyue/Personal/blog/Blog/JVM/constant_table_type.jpg)
+![constant_table_type](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/constant_table_type.jpg)
 
-![constant_class_info](/Users/lixiangyue/Personal/blog/Blog/JVM/constant_class_info.jpg)
+![constant_class_info](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/constant_class_info.jpg)
 
-![constant_table_1](/Users/lixiangyue/Personal/blog/Blog/JVM/constant_table_1.jpg)
+![constant_table_1](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/constant_table_1.jpg)
 
-![constant_table_2](/Users/lixiangyue/Personal/blog/Blog/JVM/constant_table_2.jpg)
+![constant_table_2](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/constant_table_2.jpg)
 
-![constant_table_3](/Users/lixiangyue/Personal/blog/Blog/JVM/constant_table_3.jpg)
+![constant_table_3](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/constant_table_3.jpg)
 
 ##### 访问标志
 
@@ -212,16 +212,16 @@ magic number：占用前四个字节，内容固定为CAFEBABE，用来标志文
 7. 方法表示，比如 `int indexOf(char[] source, int sourceOffset, int sourceCount,char[] target, int targetOffset, int targetCount,int fromIndex)`则可以表示为 ([CII[CIII)I
 8. attributes会存放一些额外信息，比如`final static int m = 123`，则attributes可能会存在一项ConstantValue属性，指向常量123
 
-![field_info](/Users/lixiangyue/Personal/blog/Blog/JVM/field_info.jpg)
+![field_info](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/field_info.jpg)
 
-![desciptor_info](/Users/lixiangyue/Personal/blog/Blog/JVM/desciptor_info.jpg)
+![desciptor_info](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/desciptor_info.jpg)
 
 ##### 方法表集合
 
 1. 字段表集合之后是方法表集合，用于描述接口或类中的方法。包括access_flags、name_index、descriptor_index、attributes_count、attributes。各字段含义与字段表中的含义基本一致。
 2. 方法中的代码被放到了attributes表中的一个名为Code的属性里
 
-![method_info](/Users/lixiangyue/Personal/blog/Blog/JVM/method_info.jpg)
+![method_info](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/method_info.jpg)
 
 ##### 属性表
 
@@ -362,7 +362,7 @@ magic number：占用前四个字节，内容固定为CAFEBABE，用来标志文
 8. 双亲委派模型的工作过程为：如果一个类加载器收到一个类加载的请求，那么会把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，最终都会送到最顶层的类加载器去完成，如果父类加载器无法完成加载时，则由子加载器完成加载。
 9. 这种模型会让Java中的类跟随类加载器一起具备类优先级的层次关系。保证都是同一个类。
 
-![class_loader](/Users/lixiangyue/Personal/blog/Blog/JVM/class_loader.jpg)
+![class_loader](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/class_loader.jpg)
 
 ### 虚拟机字节码执行引擎
 
@@ -372,7 +372,7 @@ magic number：占用前四个字节，内容固定为CAFEBABE，用来标志文
 2. 栈帧中的内存分配多少内存，在编译时就已经决定了
 3. 以Java程序的视角看，在同一时刻、同一个线程内，所有调用堆栈中的方法都是运行状态，而对于执行引擎来说，栈顶的栈帧才是生效的，称为Current Stack Frame。总体结构如下图
 
-![stack_frame](/Users/lixiangyue/Personal/blog/Blog/JVM/concept_of_stack_frame.jpg)
+![stack_frame](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/concept_of_stack_frame.jpg)
 
 ##### 局部变量表
 
@@ -432,14 +432,14 @@ magic number：占用前四个字节，内容固定为CAFEBABE，用来标志文
 
 1. 高效并发一般会涉及到数据一致性的问题，比如多个处理器都有自己的高速缓存，他们会共享内存区域，所以需要缓存一致性协议，来保证数据的一致性
 
-![cache](/Users/lixiangyue/Personal/blog/Blog/JVM/cache_consistance.jpg)
+![cache](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/cache_consistance.jpg)
 
 ##### Java内存模型
 
 1. Java内存模型的主要目的是定义程序中各种变量的访问规则，即关注JVM从内存中取出变量值和将变量值存到内存的底层细节
 2. Java内存模型规定，所有的变量都存储在主内存（属于虚拟机的一部分），每条线程都有自己的工作内存，工作内存中保存了呗线程使用的变量的主内存副本，线程对变量的所有操作必须在工作内存中完成，而且不能直接读写主内存中的数据；不同线程之间也不能互相访问工作内存，线程间的数据传递必须通过主存来完成。
 
-![java_memory_model](/Users/lixiangyue/Personal/blog/Blog/JVM/java_memory_model.jpg)
+![java_memory_model](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/java_memory_model.jpg)
 
 ##### 内存间交互操作
 
@@ -531,9 +531,9 @@ magic number：占用前四个字节，内容固定为CAFEBABE，用来标志文
 2. 轻量级锁工作过程：代码进入同步快的时候，如果此同步对象没有被锁定，则JVM首先会在当前线程的栈帧中建立一个名为锁记录（Lock Record）的空间，用于存储锁对象目前的Mark Word拷贝.然后JVM将使用CAS操作尝试把对象的Mark Word更新为指向Lock Record的指针，如果操作成功了，则代表拥有了这个对象的锁，并将标记位更新为“00”，表示为轻量级锁状态。如果更新失败了，则查看是否当前的对象的Mark Word是否指向当前线程的栈帧，如果拥有则直接进入。如果两个以上的线程争用同一个锁，则膨胀为重量级锁
 3. 解锁过程：通过CAS操作把对象的Mark Word和线程中复制的Displaced Mark Word替换回来，如果成功，则顺利完成。如果失败，则证明有其他线程尝试过该锁，则需要做唤醒操作
 
-![mark_word](/Users/lixiangyue/Personal/blog/Blog/JVM/mark_word.jpg)
+![mark_word](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/mark_word.jpg)
 
-![CAS](/Users/lixiangyue/Personal/blog/Blog/JVM/CAS.jpg)
+![CAS](https://github.com/ToTheMoonLee/Blog/blob/main/JVM/illustration/CAS.jpg)
 
 ##### 偏向锁
 
