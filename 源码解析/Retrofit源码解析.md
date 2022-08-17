@@ -14,8 +14,8 @@
 
 ```
 interface ApiService {
-    @GET("/")
-    fun call(): Call<ResponseBody?>
+    @GET("users/{user}/repos")
+    fun getResponse(@Path("user") user: String?): Call<List<Repo?>>
 }
 ```
 
@@ -27,6 +27,7 @@ val retrofit = Retrofit.Builder().baseUrl("https://api.github.com/")
             .build()
         val apiService = retrofit.create(ApiService::class.java)
         val repos = apiService.getResponse("octocat")
+        // 同一个Call只能enqueue一次
         repos.enqueue(object : Callback<List<Repo?>> {
             override fun onFailure(call: Call<List<Repo?>>, t: Throwable) {
                 println("response is failure : ${t}")
@@ -98,7 +99,7 @@ public final class Retrofit {
 
 ```
 private void validateServiceInterface(Class<?> service) {
-	// 1. 验证传入的serice是否是一个类，isInterface()是Class类中的一个方法，里面具体的判断是验证表示类修饰符的flag是否是INTERFACE，JVM中已经定义好的
+	// 1. 验证传入的Class类型的serice是否是一个接口，isInterface()是Class类中的一个方法，里面具体的判断是验证表示类修饰符的flag是否是INTERFACE，JVM中已经定义好的
     if (!service.isInterface()) {
       throw new IllegalArgumentException("API declarations must be interfaces.");
     }
@@ -117,7 +118,7 @@ private void validateServiceInterface(Class<?> service) {
       }
       Collections.addAll(check, candidate.getInterfaces());
     }
-	// 3. 在调用Retrofit的方法的时候，第一次会进行初始化操作，主要是验证一些方法的合法性等，只有在调用的时候才验证。而这里是判断是否用于激进的验证，如果开启，则在初始化的时候，就将所有的方法都初始化出来。主要用于在开发时，保证将错误第一时间暴露出来。正式环境不建议打开，因为在loadServiceMethod执行的时候会用到一点点反射，如果全部都在一开始就进行验证，则会造成性能的损失。而不打开这个开关的话，则可以将时间均摊到使用时
+	// 3. 当我们在调用请求数据的方法时，比如apiService.getResponse()，此时会进行根据我们ApiService#getResponse的方法描述，初始化一个ServiceMethod，主要是验证一些方法的合法性以及根据对于的注解参数等初始化，这个操作只有在调用每个方法的时候才验证。而这里会根据validateEagerly的值来判断是否进行激进的验证，如果validateEagerly为true，则在初始化的时候，就会将ApiService中所有的方法都初始化出来。其作用是用于开发时，保证将有错误的方法第一时间暴露出来。正式环境不建议打开，因为在loadServiceMethod执行的时候会用到一点点反射，如果全部都在一开始就进行验证，则会造成性能的损失。而不打开这个开关的话，则可以将时间均摊到调用ApiService的每个方法中。
     if (validateEagerly) {
       Platform platform = Platform.get();
       // Java8可以写默认方法和静态方法，这里Retrofit对其进行了过滤
@@ -367,6 +368,7 @@ ServiceMethod<?> loadServiceMethod(Method method) {
 ```
 abstract class ServiceMethod<T> {
   static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
+  	 // 这里要将我们定义的ApiService.class中的方法，根据注解、参数等，进行解析，并将参数保存起来，包括Method、hasBody等，并包装到RequestFactory中返回
     RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
 
     Type returnType = method.getGenericReturnType();
@@ -497,11 +499,10 @@ public void enqueue(final Callback<T> callback) {
 
 最终我们看到，实际上是使用OkHttp的Call对象进行了`enqueue()`的调用，从而实现了网络交互。
 这里先总结一下：
-1. 使用`retrofit.create(ApiService::class.java)`来创建代理对象，代理对象中真正调用某个方法的时候，在这个例子中会返回对应的`call`（Retrofit的call）对象
-2. `retrofit.create(ApiService::class.java)`中的核心是`InvocationHandler`类的`invoke()`方法，这个方法会在请求网络方法调用的时候调用，在这个例子中，就是`apiService.getResponse("octocat")`调用的时候会被调用，并返回一个`Call`对象
-3. `InvocationHandler`类的`invoke()`方法中，真正会调用`ServiceMethod`的`invoke()`方法，而`ServiceMethod`类真正调用`invoke()`的是`HttpServiceMethod`中的`invoke()`方法
-4. `HttpServiceMethod`中的`invoke()`方法真正执行的是`new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);`，虽然里面有`adapt(call, args)`方法，但是不是核心，其实核心逻辑就是返回一个`OkHttpCall`的对象
-5. 从而之后执行`repos.enqueue()`方法的时候，真正执行的就是`OkHttpCall`的`enqueue()`方法，而该方法中真正执行的是`OkHttp`的`Call`的`enqueue()`方法，并将结果解析后返回
+1. 使用`retrofit.create(ApiService::class.java)`来创建代理对象，这个代理对象会代理我们定义的类（本例中是ApiService）中的方法，当我们调用`retrofit.create(ApiService::class.java)`生成的对象的方法时（如`apiService.getResponse("octocat")`），其实会执行`InvocationHandler`的`invoke()`方法，从而返回一个`Call`对象。
+2. `InvocationHandler`类的`invoke()`方法中，会先通过`loadServiceMethod()`来生成一个`ServiceMethod`对象，这个对象其实就是分析我们在`ApiService`中定义的接口方法来生成的（实际上就是在分析各个注解、参数等），最终会调用`ServiceMethod`的父类`HttpServiceMethod`的`invoke()`方法，并返回`Call`对象。
+3. `HttpServiceMethod`中的`invoke()`方法真正执行的是`new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);`，虽然里面有`adapt(call, args)`方法，但是不是核心，其实核心逻辑就是返回一个`OkHttpCall`的对象。
+4. 从而之后执行`repos.enqueue()`方法的时候，真正执行的就是`OkHttpCall`的`enqueue()`方法，而该方法中真正执行的是`OkHttp`库中的`Call`的`enqueue()`方法，并将结果解析后返回
 
 接下来，我们来看下`adapt(call, args)`方法又到底做了什么事情，首先，还是从`HttpServiceMethod<ResponseT, ReturnT> parseAnnotations()`方法开始：
 
@@ -603,7 +604,7 @@ static <ResponseT, ReturnT> HttpServiceMethod<ResponseT, ReturnT> parseAnnotatio
 
 ```
 
-这里可以看出，首先从`Retrofit`的`build()`方法中，初始化了一个默认的`DefaultCallAdapterFactory`，然后这个对象会保存在`Retrofit`对象中，而`Retrofit`的`callAdapter()`方法又会使用这个对象的`get()`方法，来初始化一个`Adapter`对象，而在`HttpServiceMethod`的`createCallAdapter()`方法中，会调用`Retrofit`的`callAdapter()`方法来初始化这个类，所以我们只需要看看`DefaultCallAdapterFactory`到底初始化了什么类即可，直接看该类的get()方法：
+这里可以看出，首先从`Retrofit`的`build()`方法中，初始化了一个默认的`DefaultCallAdapterFactory`，然后这个对象会保存在`Retrofit`对象中，而`Retrofit`的`callAdapter()`方法又会使用这个对象的`get()`方法，来初始化一个`Adapter`对象，在`HttpServiceMethod`的`createCallAdapter()`方法中，会调用`Retrofit`的`callAdapter()`方法来初始化这个类，所以我们只需要看看`DefaultCallAdapterFactory`到底初始化了什么类即可，直接看该类的get()方法：
 
 ```
 @Override
@@ -717,9 +718,35 @@ static <ResponseT, ReturnT> HttpServiceMethod<ResponseT, ReturnT> parseAnnotatio
 看到这里就明白了，原来是`Retrofit`使用`MainThreadExecutor`自动将返回Response的调用从子线程切到了住线程，从而不用我们自己手动切线程了。
 
 再次总结一下：
-1. 在`Retrofit`配置的过程中，会初始化一个`DefaultCallAdapterFactory`对象，这个对象会用来初始化`ExecutorCallbackCall`对象，这`ExecutorCallbackCall`对象中会用到一个`MainThreadExecutor`来切换主线程
+1. 在`Retrofit`配置的过程中，会初始化一个`DefaultCallAdapterFactory`对象，这个对象会用来初始化`CallAdapter`对象，而在`CallAdapter`对象中的`adapt()`方法中会返回`ExecutorCallbackCall`对象，在`ExecutorCallbackCall`对象中会用到一个`MainThreadExecutor`来切换主线程
 2. 在`HttpServiceMethod`的`parseAnnotations()`方法中会返回`CallAdapted`的对象，而其中的	`adapt()`方法进而会调用`CallAdapter`的`adapt()`来返回一个`ExecutorCallbackCall`对象
 3. 拿到这个对象之后，则会真正调用`OkHttpCall`的`enqueue()`，同时在`enqueue()`中使用主线程的	`Executor`来切换主线程
+4. 这个call的包装如下图：
+![call_adapt](/Users/lixiangyue/Personal/blog/Blog/源码解析/media/Retrofit/call_adapt.jpg)
+
+再次总结一下上图：从这段代码说起
+
+```
+        val apiService = retrofit.create(ApiService::class.java)
+
+        val repos = apiService.getResponse("octocat")
+
+        // 同一个Call只能enqueue一次
+        repos.enqueue(object : Callback<List<Repo?>> {
+            override fun onResponse(call: Call<List<Repo?>>, response: Response<List<Repo?>>) {
+                println("response is successful: ${response.body()?.get(0)?.name}")
+            }
+
+            override fun onFailure(call: Call<List<Repo?>>, t: Throwable) {
+                println("response is failure : ${t}")
+            }
+
+        })
+```
+
+`retrofit.create(ApiService::class.java)`会根据我们的`ApiService.class`创建出代理对象，并使用`InvocationHandler`代理每一个方法的调用。
+调用`apiService.getResponse("octocat")`方法时，会使用`InvocationHandler`代理执行内部的`loadServiceMethod(method).invoke(args)`方法，并返回一个`Call`对象。`loadServiceMethod(method)`会通过调用`HttpServiceMethod`的`parseAnnotations()`方法，并最终返回`CallAdapted`对象，之后调用`invoke(args)`方法时，会如上图，创建一个`OkhttpCall`对象，并调用`DefaultCallAdapterFactory`类返回的`adapt(call)`方法，而`adapt(call)`方法会将传入的`OkhttpCall`包到`DefaultCallAdapterFactory.ExecutorCallbackCall`类中，这里其实也是使用到了代理模式。之后执行`repos.enqueue()`的时候，实际会执行`DefaultCallAdapterFactory.ExecutorCallbackCall`的`enqueue()`方法，而这个方法又会调用内部的`OkhttpCall`的`enqueue()	`方法，而`OkhttpCall`内部真正会创建`okhttp3.Call`，并调用`okhttp3.Call`的`enqueue()`方法，最终回调到`DefaultCallAdapterFactory.ExecutorCallbackCall`中的`callback()`，并在其中完成线程切换。
+
 
 主流程大概搞明白了，接下来看下其他的细节，首先看下创建OkHttp3的Call的参数是哪儿来的，看下代码：
 
@@ -832,11 +859,12 @@ static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
     }
 ```
 
-总之就是根据对方法的解析，得到Okhttp3需要使用的各种参数，并帮我们生成request、call等。
+总之就是根据对方法的解析，得到构建Http请求需要使用的各种参数（如url、headers、contentType等），这些参数再之后调用enqueue方法时，内部会根据这些参数生成Okhttp3的request、call等。
 
 接下来继续看看convertor是如何使用的，其实跟callAdapterFactories的方式是一样的，都是从Retrofit的build中传入进来的，只不过在使用的时候，是在response方法中使用的，代码如下：
 
 ```
+// OkhttpCall.java 在enqueue方法的callback回调中，会调用parseResponse方法
 Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {
     ResponseBody rawBody = rawResponse.body();
 	....
@@ -931,7 +959,7 @@ public @Nullable CallAdapter<?, ?> get(
   }
 ```
 
-上述代码中会先判断是否是`Flowable.class`，是否是`Single.class`等等，从而最终会返回一个`RxJava2CallAdapter`的对象，从而就能够与`RxJava`相结合了
+上述代码中会先判断是否是`Flowable.class`，是否是`Single.class`等等，从而最终会返回一个`RxJava2CallAdapter`的对象，在`RxJava2CallAdapter`的`adapt()`方法中，就会将`OkhttpCall`包装成`Observable`，从而就能够与`RxJava`相结合了
 
 
 
